@@ -1,0 +1,44 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_and_push_images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Build and Test Client
+        run: docker build -t abdulrehmanconq/react-test -f ./client/Dockerfile.dev ./client
+        working-directory: ${{ github.workspace }}
+
+      - name: Run Client Tests
+        run: docker run -e CI=true abdulrehmanconq/react-test npm test
+        working-directory: ${{ github.workspace }}
+
+      - name: Build and Push Images
+        run: |
+          docker build -t abdulrehmanconq/multi-client ./client
+          docker build -t abdulrehmanconq/multi-nginx ./nginx
+          docker build -t abdulrehmanconq/multi-server ./server
+          docker build -t abdulrehmanconq/multi-worker ./worker
+        working-directory: ${{ github.workspace }}
+
+      - name: Log in to Docker Hub
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_ID: ${{ secrets.DOCKER_USERNAME }}
+
+      - name: Push Images to Docker Hub
+        run: |
+          docker push abdulrehmanconq/multi-client
+          docker push abdulrehmanconq/multi-nginx
+          docker push abdulrehmanconq/multi-server
+          docker push abdulrehmanconq/multi-worker
+        working-directory: ${{ github.workspace }}

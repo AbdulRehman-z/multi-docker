@@ -30,10 +30,10 @@ jobs:
         working-directory: ${{ github.workspace }}
 
       - name: Log in to Docker Hub
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-        env:
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKER_ID: ${{ secrets.DOCKER_USERNAME }}
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push Images to Docker Hub
         run: |
